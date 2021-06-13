@@ -6,13 +6,10 @@ import time
 import dev.display.Console as Console
 import dev.input as input
 
-class ErrorWasOccurredInStandByUserIdInput(state.IState):
+class ErrorWasOccurred(state.IState):
     def entry(self):
         self.__start_time = time.time()
         self.__pressed_key = input.PressedKey()
-        Console.puts("")
-        Console.puts("未登録の社員番号です。")
-        Console.puts("新規ユーザー登録と言いたいところですが、未実装なのでちょっとしたら元の画面に戻ります")
 
     def do(self):
         self.__pressed_key.capture()
@@ -21,7 +18,7 @@ class ErrorWasOccurredInStandByUserIdInput(state.IState):
         pass
 
     def get_next_state(self):
-        return state.StandbyUserIdInput()
+        return state.CommonResource.prev_state
 
     def should_exit(self):
         return self.__pressed_key.exists() or self.__timeout_detected()

@@ -18,10 +18,8 @@ class PressedKey():
         self.__pressed_key = ""
 
         if self.__keyboard.is_finished:
+            self.__keyboard.setDaemon(True)
             self.__keyboard.start()
-
-    def __del__(self):
-        self.__keyboard.terminate()
 
     def capture(self):
         self.__keyboard.get_lock_object().acquire()
@@ -49,10 +47,6 @@ class PressedKey():
 
     def is_delete(self):
         return self.__pressed_key == b'\x08'
-
-    def terminate(self):
-        self.__keyboard.terminate()
-
 
 def debug_this_module():
     Console.clear()

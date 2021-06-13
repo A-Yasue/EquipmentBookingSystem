@@ -12,6 +12,7 @@ class StateController():
         self.__current.entry()
         self.__start_time = time.time()
         self.__pressed_key = input.PressedKey()
+        state.CommonResource.prev_state = self.__current
 
     def step(self):
         self.__pressed_key.capture()
@@ -21,16 +22,23 @@ class StateController():
 
         if (self.__current.should_exit()):
             # 現在の状態を終了すべき場合、
+
             # 1. 現在の状態を終了する
             self.__current.exit()
 
-            # 2. 次の状態を取得し、状態遷移を行う
-            self.__current = self.__current.get_next_state()
+            # 2. 次の状態を取得する
+            next_state = self.__current.get_next_state()
 
-            # 3. 遷移先の状態を開始する
+            # 3. 遷移前の状態を記憶する
+            state.CommonResource.prev_state = self.__current
+
+            # 4. 状態遷移を行う
+            self.__current = next_state
+
+            # 5. 遷移先の状態を開始する
             self.__current.entry()
 
-            # 4. タイムアウト時間をクリアする
+            # 6. タイムアウト時間をクリアする
             self.__restart_timer()
 
         elif (self.__current.__class__ is not state.Init().__class__ and

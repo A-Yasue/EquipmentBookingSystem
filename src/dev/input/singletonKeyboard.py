@@ -54,6 +54,7 @@ class SingletonKeyboard(threading.Thread, despattern.Singleton):
         return self.__pressed_count
 
     def terminate(self):
+
         self.__is_finished = True
 
     def get_lock_object(self):
@@ -63,7 +64,6 @@ class SingletonKeyboard(threading.Thread, despattern.Singleton):
 def debug_this_module():
     keyboard = SingletonKeyboard()
     keyboard.start()
-
     prev = 0
     while keyboard.get_pressed_count() < 30:
         keyboard.get_lock_object().acquire()
