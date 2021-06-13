@@ -19,18 +19,18 @@ class StateController():
         # 現在の状態を実行する
         self.__current.do()
 
-        if (self.__current.event()):
-
-            # 遷移イベントが検出された場合、現在の状態を終了する
+        if (self.__current.should_exit()):
+            # 現在の状態を終了すべき場合、
+            # 1. 現在の状態を終了する
             self.__current.exit()
 
-            # 次の状態を取得し、状態遷移を行う
-            self.__current = self.__current.next()
+            # 2. 次の状態を取得し、状態遷移を行う
+            self.__current = self.__current.get_next_state()
 
-            # 遷移先の状態を開始する
+            # 3. 遷移先の状態を開始する
             self.__current.entry()
 
-            # タイムアウト時間をクリアする
+            # 4. タイムアウト時間をクリアする
             self.__restart_timer()
 
         elif (self.__current.__class__ is not state.Init().__class__ and

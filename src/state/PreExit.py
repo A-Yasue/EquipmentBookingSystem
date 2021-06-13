@@ -21,12 +21,12 @@ class PreExit(state.IState):
     def exit(self):
         pass
 
-    def next(self):
+    def get_next_state(self):
         if self.__pressed_key.is_escape():
             return state.Exit()
         else:
             return state.Init()
 
-    def event(self):
+    def should_exit(self):
         return self.__pressed_key.exists()
 

@@ -12,7 +12,7 @@ class StandbyUserIdInput(state.IState):
         Console.puts("社員証をかざしてください")
         Console.puts(">", end="")
         self.__input = input.UserInputReader()
-        self.__next = state.ErrorWasOccurredInStandByUserIdInput()
+        self.__get_next_state = state.ErrorWasOccurredInStandByUserIdInput()
 
     def do(self):
         self.__input.capture()
@@ -26,12 +26,12 @@ class StandbyUserIdInput(state.IState):
                 state.CommonResource.employeeId = employee_id
 
             # 現状は未実装なので必ず失敗
-            self.__next = state.ErrorWasOccurredInStandByUserIdInput()
+            self.__get_next_state = state.ErrorWasOccurredInStandByUserIdInput()
         else:
-            self.__next = state.StandbyUserIdInput()
+            self.__get_next_state = state.StandbyUserIdInput()
 
-    def next(self):
-        return self.__next
+    def get_next_state(self):
+        return self.__get_next_state
 
-    def event(self):
+    def should_exit(self):
         return self.__input.submitted()

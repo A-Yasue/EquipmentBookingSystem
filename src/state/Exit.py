@@ -15,9 +15,9 @@ class Exit(state.IState):
     def exit(self):
         pass
 
-    def next(self):
+    def get_next_state(self):
         return state.Exit()
 
-    def event(self):
+    def should_exit(self):
         return False
 

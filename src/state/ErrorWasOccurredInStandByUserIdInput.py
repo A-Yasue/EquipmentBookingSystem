@@ -20,10 +20,10 @@ class ErrorWasOccurredInStandByUserIdInput(state.IState):
     def exit(self):
         pass
 
-    def next(self):
+    def get_next_state(self):
         return state.StandbyUserIdInput()
 
-    def event(self):
+    def should_exit(self):
         return self.__pressed_key.exists() or self.__timeout_detected()
 
     # 3秒経過でタイムアウト

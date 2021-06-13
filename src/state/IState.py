@@ -21,11 +21,11 @@ class IState(metaclass=abc.ABCMeta):
             "users must define 'exit' to use this base class")
 
     @abc.abstractmethod
-    def next(self):
+    def get_next_state(self):
         raise NotImplementedError(
-            "users must define 'next' to use this base class")
+            "users must define 'get_next_state' to use this base class")
 
     @abc.abstractmethod
-    def event(self):
+    def should_exit(self):
         raise NotImplementedError(
-            "users must define 'event' to use this base class")
+            "users must define 'should_exit' to use this base class")
