@@ -66,16 +66,16 @@ class ConsoleTextField(input.IUserInputReader):
 def debug_this_module():
     Console.clear()
 
-    kpb = ConsoleTextField()
+    text_field = ConsoleTextField()
 
-    while not kpb.submitted():
-        kpb.capture()
+    while not text_field.submitted():
+        text_field.capture()
         time.sleep(0.010)
 
-    Console.puts("Your input is :", kpb.get_string())
+    Console.puts("Your input is :", text_field.get_string())
     time.sleep(3)
 
-    del kpb
+    del text_field
 
 
 if __name__ == "__main__":
