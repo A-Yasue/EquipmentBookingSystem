@@ -30,9 +30,6 @@ class SingletonKeyboard(threading.Thread, despattern.Singleton):
         self.__pressed_count = 0
         self.__lock = threading.Lock()
 
-    def __del__(self):
-        self.terminate()
-
     def run(self):
         self.__is_finished = False
 

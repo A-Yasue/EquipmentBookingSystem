@@ -37,7 +37,7 @@ class PressedKey():
         return self.__pressed_key
 
     def exists(self):
-        return self.__pressed_key
+        return self.__pressed_key != ""
 
     def is_escape(self):
         return self.__pressed_key == b'\x1b'

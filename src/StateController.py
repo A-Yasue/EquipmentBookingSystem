@@ -47,6 +47,7 @@ class StateController():
             # 前状態のexitは実行しないためリソースの解放はデストラクタに実装すること
 
             if self.__timeout_detected() or self.__pressed_key.is_escape():
+                state.CommonResource.prev_state = self.__current
                 self.__current = state.Restart()
                 self.__current.entry()
                 self.__restart_timer()
