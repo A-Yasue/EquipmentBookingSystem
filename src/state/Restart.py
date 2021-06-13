@@ -10,14 +10,14 @@ import dev.input as input
 class Restart(state.IState):
     def entry(self):
         self.__start_time = time.time()
-        self.__key_pressed_monitor = input.KeyPressedMonitor()
+        self.__pressed_key = input.PressedKey()
         Console.clear()
         if state.CommonResource.employeeId != "":
             Console.puts(state.CommonResource.employeeId, "さん。")
         Console.puts("一定時間操作がなかったか終了コードを受け付けたためエントランスに戻ります。")
 
     def do(self):
-        self.__key_pressed_monitor.capture()
+        self.__pressed_key.capture()
 
     def exit(self):
         pass
@@ -26,7 +26,7 @@ class Restart(state.IState):
         return state.Init()
 
     def event(self):
-        return self.__key_pressed_monitor.is_pressed_anykey() or self.__timeout_detected()
+        return self.__pressed_key.exists() or self.__timeout_detected()
 
     # 3秒経過でタイムアウト
     def __timeout_detected(self):

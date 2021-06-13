@@ -12,40 +12,39 @@ import dev.display.Console as Console
 import dev.input as input
 
 
-class KeyPressedBuffering(input.IUserInputReader):
+class ConsoleTextField(input.IUserInputReader):
     def __init__(self):
-        self.__key_pressed_monitor = input.KeyPressedMonitor()
+        self.__pressed_key = input.PressedKey()
         self.__string = ""
         self.__submitted = False
-        self.__updated = False
         self.__is_real_time_display_mode = True
 
     def capture(self):
-        self.__key_pressed_monitor.capture()
+        self.__pressed_key.capture()
 
-        if self.__key_pressed_monitor.is_pressed_anykey():
-            self.__updated = True
+        if self.__pressed_key.exists():
 
-            if self.__key_pressed_monitor.is_pressed_enterkey():
+            if self.__pressed_key.is_enter():
                 # Submit keyboard input
                 self.__submitted = True
                 if self.__is_real_time_display_mode:
                     Console.puts("")  # New line
 
-            elif self.__key_pressed_monitor.is_pressed_escapekey():
+            elif self.__pressed_key.is_escape():
                 # Clear buffer
                 self.__string = ""
                 if self.__is_real_time_display_mode:
                     Console.remove_line()
 
-            elif self.__key_pressed_monitor.is_pressed_deletekey():
+            elif self.__pressed_key.is_delete():
                 # Remove a last charcter
-                self.__string = self.__string[:-1]
-                if self.__is_real_time_display_mode:
-                    Console.remove_char()
+                if ( len(self.__string) > 0 ):
+                    self.__string = self.__string[:-1]
+                    if self.__is_real_time_display_mode:
+                        Console.remove_char()
             else:
                 # Join a character to last position
-                key = chr(ord(self.__key_pressed_monitor.get_pressed_key()))
+                key = chr(ord(self.__pressed_key.get()))
                 if key.isascii():
                     self.__string += key
                     if self.__is_real_time_display_mode:
@@ -60,17 +59,14 @@ class KeyPressedBuffering(input.IUserInputReader):
     def submitted(self):
         return self.__submitted
 
-    def updated(self):
-        return self.__updated
-
-    def real_time_display(self, enabled):
+    def display_in_real_time(self, enabled):
         self.__is_real_time_display_mode = enabled
 
 
 def debug_this_module():
     Console.clear()
 
-    kpb = KeyPressedBuffering()
+    kpb = ConsoleTextField()
 
     while not kpb.submitted():
         kpb.capture()

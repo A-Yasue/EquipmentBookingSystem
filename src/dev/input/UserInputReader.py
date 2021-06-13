@@ -13,24 +13,24 @@ import dev.input as input
 
 class UserInputReader(input.IUserInputReader):
     def __init__(self):
-        self.__key_pressed_buf = input.KeyPressedBuffering()
+        self.__pressed_key_buf = input.ConsoleTextField()
         self.__rfid_reader = input.RFIDReader()
 
     def capture(self):
-        self.__key_pressed_buf.capture()
+        self.__pressed_key_buf.capture()
         self.__rfid_reader.capture()
 
     def get_string(self):
         if self.__rfid_reader.submitted():
             device = self.__rfid_reader
         else:
-            device = self.__key_pressed_buf
+            device = self.__pressed_key_buf
 
         return device.get_string()
 
     def submitted(self):
         return (
-            self.__key_pressed_buf.submitted() or
+            self.__pressed_key_buf.submitted() or
             self.__rfid_reader.submitted()
         )
 

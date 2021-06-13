@@ -11,10 +11,10 @@ class StateController():
         self.__current = state.Init()
         self.__current.entry()
         self.__start_time = time.time()
-        self.__key_pressed_monitor = input.KeyPressedMonitor()
+        self.__pressed_key = input.PressedKey()
 
     def step(self):
-        self.__key_pressed_monitor.capture()
+        self.__pressed_key.capture()
 
         # 現在の状態を実行する
         self.__current.do()
@@ -38,7 +38,7 @@ class StateController():
             # Init でも Restart でもない場合はタイムアウトとESCの入力を監視しRestartに遷移する
             # 前状態のexitは実行しないためリソースの解放はデストラクタに実装すること
 
-            if self.__timeout_detected() or self.__key_pressed_monitor.is_pressed_escapekey():
+            if self.__timeout_detected() or self.__pressed_key.is_escape():
                 self.__current = state.Restart()
                 self.__current.entry()
                 self.__restart_timer()
@@ -54,7 +54,7 @@ class StateController():
 
     def __timeout_detected(self):
         # Refresh timer when any key pressed
-        if self.__key_pressed_monitor.is_pressed_anykey():
+        if self.__pressed_key.exists():
             self.__restart_timer()
 
         elapsed_time = time.time() - self.__start_time

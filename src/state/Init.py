@@ -11,23 +11,23 @@ class Init(state.IState):
 
     def entry(self):
         state.CommonResource.initialize()
-        self.__key_pressed_monitor = input.KeyPressedMonitor()
+        self.__pressed_key = input.PressedKey()
         Console.clear()
         Console.puts("備品管理システムにようこそ")
         Console.puts("何かキーを押すとサービスを開始します")
 
     def do(self):
-        self.__key_pressed_monitor.capture()
+        self.__pressed_key.capture()
 
     def exit(self):
         pass
 
     def next(self):
-        if self.__key_pressed_monitor.is_pressed_escapekey():
+        if self.__pressed_key.is_escape():
             return state.PreExit()
         else:
             return state.StandbyUserIdInput()
 
     def event(self):
-        return self.__key_pressed_monitor.is_pressed_anykey()
+        return self.__pressed_key.exists()
 

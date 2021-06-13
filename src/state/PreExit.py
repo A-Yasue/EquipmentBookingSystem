@@ -11,22 +11,22 @@ class PreExit(state.IState):
 
     def entry(self):
         state.CommonResource.initialize()
-        self.__key_pressed_monitor = input.KeyPressedMonitor()
+        self.__pressed_key = input.PressedKey()
         Console.puts("エントランスでESCキーが入力されました。")
         Console.puts("タイムアウト前にもう一度ESCキーを入力すると完全にプログラムを終了します。")
 
     def do(self):
-        self.__key_pressed_monitor.capture()
+        self.__pressed_key.capture()
 
     def exit(self):
         pass
 
     def next(self):
-        if self.__key_pressed_monitor.is_pressed_escapekey():
+        if self.__pressed_key.is_escape():
             return state.Exit()
         else:
             return state.Init()
 
     def event(self):
-        return self.__key_pressed_monitor.is_pressed_anykey()
+        return self.__pressed_key.exists()
 

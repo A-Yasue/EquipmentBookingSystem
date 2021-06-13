@@ -11,7 +11,7 @@ import dev.display.Console as Console
 import dev.input as input
 
 
-class KeyPressedMonitor():
+class PressedKey():
     def __init__(self):
         self.__keyboard = input.SingletonKeyboard()
         self.__pressed_count = self.__keyboard.get_pressed_count()
@@ -35,19 +35,19 @@ class KeyPressedMonitor():
         else:
             self.__pressed_key = ""
 
-    def get_pressed_key(self):
+    def get(self):
         return self.__pressed_key
 
-    def is_pressed_anykey(self):
+    def exists(self):
         return self.__pressed_key
 
-    def is_pressed_escapekey(self):
+    def is_escape(self):
         return self.__pressed_key == b'\x1b'
 
-    def is_pressed_enterkey(self):
+    def is_enter(self):
         return self.__pressed_key == b'\r'
 
-    def is_pressed_deletekey(self):
+    def is_delete(self):
         return self.__pressed_key == b'\x08'
 
     def terminate(self):
@@ -57,19 +57,19 @@ class KeyPressedMonitor():
 def debug_this_module():
     Console.clear()
 
-    kpM = KeyPressedMonitor()
+    pressedKey = PressedKey()
     Console.clear()
 
     while True:
-        kpM.capture()
-        if kpM.is_pressed_escapekey():
+        pressedKey.capture()
+        if pressedKey.is_escape():
             break
-        if kpM.is_pressed_anykey():
-            key = kpM.get_pressed_key()
+        if pressedKey.exists():
+            key = pressedKey.get()
             Console.puts(key, "\t", ord(key), "\t", chr(ord(key)))
 
         time.sleep(0.010)
-    del kpM
+    del pressedKey
 
 
 if __name__ == "__main__":
