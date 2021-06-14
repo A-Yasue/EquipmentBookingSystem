@@ -6,7 +6,7 @@ from .Restart import *
 from .Exit import *
 from .PreExit import *
 from .StandbyUserIdInput import *
-from .ErrorWasOccurred import *
+from .ErrorHasOccurred import *
 from .commonResource import *
 
 

@@ -50,63 +50,97 @@ salt
         ++ <&file>PreExit.py                                | .
         ++ <&file>Exit.py                                   | .
         ++ <&file>StandbyUserIdInput.py                     | .
-        ++ <&file>ErrorWasOccurredInStandByUserIdInput.py   | .
+        ++ <&file>ErrorHasOccurred.py                       | .
     }
 }
-caption Directory structure
+caption **__Directory structure__**
 ```
 
 ### 1.3.2. Entry Point
 
-アプリケーションはmain.pyから開始します。
+アプリケーションはmain.pyから開始します。main.py起動後のアプリケーションの簡易的なシーケンスを以下に示します。
 
 ```plantuml
 autoactivate on
+hide footbox
+
+participant "__<<static>>__\n__main__" as main
+participant "__<<dynamic>>__\nclass StateController" as StateController
+participant "__<<dynamic>>__\nclass pressedKey" as pressedKey
+participant "__<<dynamic>>__\nclass singletonKeyboard\n**extend Thread**\n**extend Singleton**\n10msに一度実行" as singletonKeyboard
+participant "__<<dynamic>>__\ninterface IState" as IState
+participant "__<<static>>__\n__class commonResource__" as commonResource
 
 activate main
-main -> StateController : ~__init__():生成
-    StateController -> StateController : __current = state.Init(): 初期状態をInitに設定
-    deactivate
+main -> StateController ** : StateController():生成
+activate StateController
+    StateController -> IState ** : state.Init():生成
+    activate IState
+    return class instance
     StateController -> IState : __current.entry(): 状態開始
     deactivate
 
-    StateController -> singletonKeyboard **: キー入力スレッド起動(UserInputReader経由)
-deactivate
+    StateController -> pressedKey **: pressedKey():生成
+    activate pressedKey
+        pressedKey -> singletonKeyboard **: singletonKeyboard():生成
+        activate singletonKeyboard
+        return class instance
+        pressedKey -> singletonKeyboard : Thread.setDaemon(True):参照がなくなったら終了
+        deactivate
+        pressedKey -> singletonKeyboard : Thread.start()
+        deactivate
+    return class instance
+
+return class instance
+deactivate StateController
+
 main -> StateController : run():実行
-
-    StateController -> IState : __current.do():状態実行
-    deactivate
-
-    StateController -> IState : __current.should_exit()
-    return 状態終了要否
-
-    alt 状態終了すべき
-        StateController -> IState : __current.exit():状態終了
-        deactivate
-
-        StateController -> IState : _current.get_next_state():次状態取得
-        return 次状態
-
-        StateController -> commonResource : prev_state = __current:現在状態を記憶
-        deactivate
-
-        StateController -> StateController : __current = 次状態:状態遷移
+    loop __current != State.Exit() : 現在状態がExit以外の場合
+        ... time.sleep(10) ...
+        StateController -> pressedKey: capture()
+            critical クリティカルセッション
+            pressedKey -> singletonKeyboard: get_pressed_count()
+            return
+            pressedKey -> singletonKeyboard: get_last_pressed_key()
+            return
+            end
         deactivate
 
         StateController -> IState : __current.do():状態実行
         deactivate
-    else 現在状態次のどちらでもない: Init, Restart
-        alt エスケープキーが押された、又はタイムアウトを検知した
+
+        StateController -> IState : __current.should_exit()
+        return 状態終了要否
+
+        alt 状態終了すべき
+            StateController -> IState : __current.exit():状態終了
+            deactivate
+
+            StateController -> IState : _current.get_next_state():次状態取得
+            return 次状態
+
             StateController -> commonResource : prev_state = __current:現在状態を記憶
             deactivate
-            StateController -> StateController : __current = state.Restart():Restartに遷移
+
+            StateController -> StateController : __current = 次状態:状態遷移
             deactivate
 
             StateController -> IState : __current.do():状態実行
             deactivate
+        else 現在状態次のどちらでもない: State.Init(), State.Restart()
+            opt エスケープキーが押された、又はタイムアウトを検知した
+                StateController -> commonResource : prev_state = __current:現在状態を記憶
+                deactivate
+                StateController -> StateController : __current = state.Restart():Restartに遷移
+                deactivate
+                StateController -> IState : __current.do():状態実行
+                deactivate
+            end
         end
     end
-
+    destroy singletonKeyboard
+deactivate
+caption **__Sequence diagram__**
 ```
 
 ### 1.3.3. dev.input package
@@ -118,20 +152,6 @@ main -> StateController : run():実行
 ```plantuml
 
 package dev.input{
-    abstract Thread{
-        スレッド機能を提供します。
-    }
-
-    class Singleton{
-        本クラスを継承したクラスはシングルトンになり、
-        クラス生成が1つしかできなくなります。
-    }
-
-    class msvcrt <<M,f6f>>{
-        Microsoftが提供するWindows用の
-        標準Cライブラリ機能を含むモジュールです。
-    }
-
     interface IUserInputReader{
         ユーザ入力インタフェース
         ----
@@ -186,9 +206,23 @@ package dev.input{
         入力を受け取ります。
     }
 }
+abstract Threading.Thread{
+    スレッド機能を提供します。
+}
 
-singletonKeyboard -do-|> Thread : <<generalize>>
-singletonKeyboard -do-|> Singleton : <<realize>>
+class cmn.Singleton{
+    本クラスを継承したクラスはシングルトンになり、
+    クラス生成が1つしかできなくなります。
+}
+
+class msvcrt <<M,f6f>>{
+    Microsoftが提供するWindows用の
+    標準Cライブラリ機能を含むモジュールです。
+}
+
+
+singletonKeyboard -do-|> Threading.Thread : <<generalize>>
+singletonKeyboard -do-|> cmn.Singleton : <<realize>>
 singletonKeyboard -do-> msvcrt : <<delegate>>
 
 pressedKey "*" -le--> "1" singletonKeyboard : <<delegate>>
@@ -201,12 +235,36 @@ UserInputReader -up-|> IUserInputReader : <<realize>>
 UserInputReader -ri-> ConsoleTextField : <<delegate>>
 UserInputReader -le-> RFIDReader : <<delegate>>
 
-caption class diagram of dev.input
+caption **__class diagram of dev.input__**
+```
+
+### 1.3.3. dev.display package
+
+画面出力を司るパッケージです。Consoleモジュールからのみ構成されます。
+
+```plantuml
+
+package dev.display{
+    class Console{
+        画面出力を行います。Linux / Windowsに対応しています。
+        ---
+        + clear():\n\t画面をクリアします
+        + puts(*objects, sep=' ', end='\\n', file=sys.stdout, flush=False):\n\tprintのラッパです。画面出力を行います。
+        + remove_line():\n\tコンソール画面から1行消去します。
+        + remove_char():\n\tコンソール画面から1文字消去します。
+    }
+}
+
+caption **__class diagram of dev.display__**
 ```
 
 ### 1.3.4. status package
 
+アプリケーションの状態を司るパッケージ群です。
+
 #### 1.3.4.1. class diagram
+
+StateControllerはIStateを実装するクラスに対し、entry, do, exit等のメソッドを用いて状態遷移を実現します。StatePatternを用いています。
 
 ```plantuml
 
@@ -246,13 +304,14 @@ package status{
         class PreExit
         class Exit
         class Restart
-        class ErrorWasOccurred
+        class ErrorHasOccurred
         class StandbyUserIdInput
         ...etc
+        ※State machineを参照してください。
     }
 }
 
-StateController -do->  IState : <<delegate>>
+StateController o-do->  IState
 ConcreteState   -up-|> IState : <<realize>>
 ConcreteState   -up->  commonResource : <<use>>
 
@@ -260,6 +319,8 @@ caption class diagram of state
 ```
 
 #### 1.3.4.2. state machine
+
+ConcreteState間の遷移を以下に示します。
 
 ```plantuml
 
@@ -294,14 +355,14 @@ state StateController{
     state PreExit : もう1度ESCキーが入力されると終了します
     state Exit : アプリケーションを終了します
     state Restart : 終了要求を受付又はタイムアウトしました
-    state ErrorWasOccured
+    state ErrorHasOccured
 }
 
 [*] -do-> entrySys
 entrySys -do-> Init
 
-ErrorWasOccured -ri-> entryToPrevState 
-exitByError -le-> ErrorWasOccured
+ErrorHasOccured -ri-> entryToPrevState 
+exitByError -le-> ErrorHasOccured
 
 Init -> PreExit : escape key was pressed
 PreExit -do-> Exit : escape key was pressed
@@ -309,12 +370,12 @@ PreExit -le-> Init : 30 seconds elasped
 Exit -up> exitSys
 exitSys -ri-> [*]
 
-Restart -ri-> Init : 5 seconds elapsed any key was pressed
+Restart -ri-> Init : 5 seconds elapsed or any key was pressed
 
-Exit -do[hidden]-> ErrorWasOccured
+Exit -do[hidden]-> ErrorHasOccured
 
-Init -do-> entryProc : Any key was pressed\nexcept the escape key
-exitProc -up-> Restart : 30 seconds elapsed\nescape key was pressed
+Init -do-> entryProc : Any key except the escape key was pressed
+exitProc -up-> Restart : 30 seconds elapsed or escape key was pressed
 
 entryProc -do-> StandbyUserIdInput
 StandbyUserIdInput -do-> StandbyUserProcedureInput
@@ -331,6 +392,6 @@ StandbyUserProcedureInput -do-> StandbyUpdateEquipmentIdInput
 StandbyUpdateEquipmentIdInput -do-> StandbyExpirationDateInputWhenUpdate
 StandbyExpirationDateInputWhenUpdate -do-> SuccessUpdateEquipment
 
+caption **__State machine of Console window__**
 
-caption State machine of Console window
 ```

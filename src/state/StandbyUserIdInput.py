@@ -12,7 +12,7 @@ class StandbyUserIdInput(state.IState):
         Console.puts("社員証をかざしてください")
         Console.puts(">", end="")
         self.__input = input.UserInputReader()
-        self.__get_next_state = state.ErrorWasOccurred()
+        self.__get_next_state = state.ErrorHasOccurred()
 
     def do(self):
         self.__input.capture()
@@ -28,7 +28,7 @@ class StandbyUserIdInput(state.IState):
                 Console.puts("存在しない社員番号です")
 
             # 現状は未実装なので必ず失敗
-            self.__get_next_state = state.ErrorWasOccurred()
+            self.__get_next_state = state.ErrorHasOccurred()
         else:
             self.__get_next_state = state.StandbyUserIdInput()
 

@@ -6,7 +6,7 @@ import time
 import dev.display.Console as Console
 import dev.input as input
 
-class ErrorWasOccurred(state.IState):
+class ErrorHasOccurred(state.IState):
     def entry(self):
         self.__start_time = time.time()
         self.__pressed_key = input.PressedKey()
