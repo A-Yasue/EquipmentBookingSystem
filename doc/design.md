@@ -1,35 +1,70 @@
 
-# 1. Document
 
-## 1.1. Environment requirements
+<style>
+h1,h2,h3,h4,h5 {
+    font-weight: bold;
+    border-bottom: inset 2px #000000;
+}
+</style>
+
+
+# 1. Environment requirements
 
 Undefined
 
-## 1.2. Coding rule
+# 2. Coding rule
 
 PEP8を推奨します。
 <https://pep8-ja.readthedocs.io/ja/latest/>
 
-## 1.3. Design
+# 3. Design
 
 本ソフトウェアの設計を示します。
 
-### 1.3.1. Directory
+## 3.1. Layer design
+
+誰かいい感じに作って
+
+```ditaa {cmd=true args=["-E"]}
+  +----------------------------------+
+  | User interface layer       cBLU  |
+  +--+---------------------------+---+
+     | Input                     ^
+     v                   Display |
+  +--+---------------------------+---+
+  | Application layer          cGRE  |
+  |                                  |
+  +--+---------------------------+---+
+     | Request                   ^ 
+     v                  Responce | 
+  +--+---------------------------+---+
+  | Database controller        cYEL  |
+  +--------------+-------------------+
+                 |
+            /----+-----\
+            | {s}      |
+            | Database |
+            | (csv)    |
+            \----------/
+```
+
+## 3.2. Directory
 
 プロジェクトのディレクトリ構成を以下に示します。
 
 ```plantuml
+scale 1.5
 salt
 {
     {T
-        **Directory structure**                             | **Description**
+        **Directory structure**                             | **Description**                       | **Layer**
          <&folder>src                                       | .
-        + <&file>main.py                                    | アプリケーションのエントリポイント
-        + <&file>StateController.py                         | アプリケーションの状態管理を行う
-        + <&folder>cmn                                      | 共通モジュール
+        + <&file>main.py                                    | アプリケーションのエントリポイント       | Application
+        + <&file>StateController.py                         | アプリケーションの状態管理を行う         | Application
+        + <&folder>cmn                                      | 共通モジュール                         | Library
         ++ <&file>~__init__.py                              | .
         ++ <&file>des_pattern.py                            | 共通デザインパターン
-        + <&folder>dev                                      | デバイス
+        + <&folder>dev                                      | デバイス                              | User interface
         ++ <&folder>display                                 | ディスプレイ
         +++ <&file>~__init__.py                             | .
         +++ <&file>Console.py                               | コンソールに対する操作を行うモジュール
@@ -41,7 +76,7 @@ salt
         +++ <&file>pressedKey.py                            | キー押下を監視するモジュール
         +++ <&file>singletonKeyboard.py                     | デバイスからキー入力を受け取るモジュール
         +++ <&file>RFIDReader.py                            | RFID
-        + <&folder>state                                    | .
+        + <&folder>state                                    | .                                     | Application
         ++ <&file>~__init__.py                              | .
         ++ <&file>commonResource.py                         | .
         ++ <&file>IState.py                                 | .
@@ -56,11 +91,14 @@ salt
 caption **__Directory structure__**
 ```
 
-### 1.3.2. Entry Point
+
+
+## 3.3. Sequence from entry point
 
 アプリケーションはmain.pyから開始します。main.py起動後のアプリケーションの簡易的なシーケンスを以下に示します。
 
 ```plantuml
+scale 0.7
 autoactivate on
 hide footbox
 
@@ -143,13 +181,14 @@ deactivate
 caption **__Sequence diagram__**
 ```
 
-### 1.3.3. dev.input package
+## 3.4. dev.input package
 
 キーボードやRFIDリーダーなどのデバイスから、ユーザ入力を受け取るパッケージです。特定のデバイスからの入力を要求しない場合、UserInputReaderを使用してください。
 
-#### 1.3.3.1. Class diagram
+## 3.5. Class diagram
 
 ```plantuml
+scale 0.8
 
 package dev.input{
     interface IUserInputReader{
@@ -238,7 +277,7 @@ UserInputReader -le-> RFIDReader : <<delegate>>
 caption **__class diagram of dev.input__**
 ```
 
-### 1.3.3. dev.display package
+## 3.6. dev.display package
 
 画面出力を司るパッケージです。Consoleモジュールからのみ構成されます。
 
@@ -258,11 +297,11 @@ package dev.display{
 caption **__class diagram of dev.display__**
 ```
 
-### 1.3.4. status package
+## 3.7. status package
 
 アプリケーションの状態を司るパッケージ群です。
 
-#### 1.3.4.1. class diagram
+## 3.8. class diagram
 
 StateControllerはIStateを実装するクラスに対し、entry, do, exit等のメソッドを用いて状態遷移を実現します。StatePatternを用いています。
 
@@ -314,16 +353,16 @@ package status{
 StateController o-do->  IState
 ConcreteState   -up-|> IState : <<realize>>
 ConcreteState   -up->  commonResource : <<use>>
+caption **__class diagram of state__**
 
-caption class diagram of state
 ```
 
-#### 1.3.4.2. state machine
+## 3.9. state machine
 
 ConcreteState間の遷移を以下に示します。
 
 ```plantuml
-
+scale 0.7
 
 state StateController{
     state entrySys <<entryPoint>>
@@ -387,10 +426,12 @@ SuccessReturnEquipment -up-> StandbyReturnEquipmentIdRead
 StandbyUserProcedureInput -do-> StandbyBarrowEquipmentIdRead
 StandbyBarrowEquipmentIdRead -do-> StandbyExpirationDateInputWhenBarrow
 StandbyExpirationDateInputWhenBarrow -do-> SuccessBarrowEquipment
+SuccessBarrowEquipment -up-> StandbyBarrowEquipmentIdRead
 
 StandbyUserProcedureInput -do-> StandbyUpdateEquipmentIdInput
 StandbyUpdateEquipmentIdInput -do-> StandbyExpirationDateInputWhenUpdate
 StandbyExpirationDateInputWhenUpdate -do-> SuccessUpdateEquipment
+SuccessUpdateEquipment -up-> StandbyUpdateEquipmentIdInput
 
 caption **__State machine of Console window__**
 
